@@ -123,7 +123,7 @@ graph_store = Neo4jGraphStore(
     password=password,
     url=uri,
     database="neo4j",
-    timeout=600.0
+    timeout=2400.0
 )
 
 storage_context = StorageContext.from_defaults(graph_store=graph_store)
@@ -132,7 +132,8 @@ storage_context = StorageContext.from_defaults(graph_store=graph_store)
 kg_index = KnowledgeGraphIndex.from_documents(
     docs,
     storage_context=storage_context,
-    max_triplets_per_chunk=8,
+    max_triplets_per_chunk=4,
+    include_embeddings=True,
     embed_model=embed_model,
     show_progress=True
 )
@@ -142,12 +143,20 @@ from llama_index.core.retrievers import KnowledgeGraphRAGRetriever
 
 graph_rag_retriever = KnowledgeGraphRAGRetriever(
     storage_context=storage_context,
+    retriever_mode="embedding",
     verbose=True,
 )
 
 query_engine = RetrieverQueryEngine.from_args(
     graph_rag_retriever,
     embed_model=embed_model,
+)
+
+query_engine = kg_index.as_query_engine(
+    include_text=True,
+    response_mode="tree_summarize",
+    embedding_mode="hybrid",
+    similarity_top_k=5,
 )
 
 

@@ -4,25 +4,25 @@ from llama_index.graph_stores.neo4j import Neo4jGraphStore
 
 from config import config
 # Enable logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # Connection details
 uri = config.NEO4J_URI
 username = config.NEO4J_USERNAME
 password = config.NEO4J_PASSWORD
-
+auth=(username, password)
 # Create the driver
-driver = GraphDatabase.driver(uri, auth=(username, password))
+driver = GraphDatabase.driver(uri, auth=auth)
 
 # Verify the connection
 try:
-    with GraphDatabase.driver(uri, auth=(username, password)) as driver:
+    with GraphDatabase.driver(uri, auth=auth) as driver:
         driver.verify_connectivity()
         print("Connection successful")
 
-    with driver.session(database="neo4j") as session:
-        result = session.run("RETURN 1")
-        print("Connection successful:", result.single()[0])
+    # with driver.session(database="neo4j") as session:
+    #     result = session.run("RETURN 1")
+    #     print("Connection successful:", result.single()[0])
 except Exception as e:
     logging.error("Failed to connect to the database:", exc_info=e)
 exit()
