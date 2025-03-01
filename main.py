@@ -1,22 +1,24 @@
+from llama_index.core.retrievers import KnowledgeGraphRAGRetriever
+from llama_index.core.query_engine import RetrieverQueryEngine
 import nest_asyncio
 
-from llama_index.core import SummaryIndex
+from llama_index.core import SummaryIndex, PromptTemplate
 from llama_index.core import KnowledgeGraphIndex
 from llama_index.core import VectorStoreIndex
-from llama_index.core import Settings, SimpleDirectoryReader, PromptTemplate
+from llama_index.core import Settings, SimpleDirectoryReader
 from llama_index.core import StorageContext, ServiceContext
 
 from llama_index.graph_stores.neo4j import Neo4jGraphStore
 
 from llama_index.llms.ollama import Ollama
 
-#from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+# from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.embeddings.ollama import OllamaEmbedding
 
-## to use Qdrant, install it w/ poetry add llama-index-vector-stores-qdrant
-## note: vectorstore not supporting python 3.13 yet, 
-#from llama_index.vector_stores.qdrant import QdrantVectorStore
-#import qdrant_client
+# to use Qdrant, install it w/ poetry add llama-index-vector-stores-qdrant
+# note: vectorstore not supporting python 3.13 yet,
+# from llama_index.vector_stores.qdrant import QdrantVectorStore
+# import qdrant_client
 
 from llama_index.vector_stores.redis import RedisVectorStore
 from redis import Redis
@@ -43,6 +45,7 @@ def create_qdrant_index(documents):
     )
     return index
 
+
 def create_redis_index(documents):
     redis_client = Redis(
         host=config.REDIS_HOST,
@@ -68,21 +71,21 @@ def create_redis_index(documents):
 
 
 # setup llm & embedding model
-llm=Ollama(model=config.OLLAMA_LLM_MODEL, base_url=f"http://{config.OLLAMA_HOST}:{config.OLLAMA_PORT}", 
-           request_timeout=600.0)
+llm = Ollama(model=config.OLLAMA_LLM_MODEL, base_url=f"http://{config.OLLAMA_HOST}:{config.OLLAMA_PORT}",
+             request_timeout=600.0)
 Settings.llm = llm
 # embed_model = HuggingFaceEmbedding( model_name="BAAI/bge-large-en-v1.5", trust_remote_code=True)
-embed_model = OllamaEmbedding(model_name=config.OLLAMA_EMBED_MODEL, 
-                              base_url=f"http://{config.OLLAMA_HOST}:{config.OLLAMA_PORT}", 
+embed_model = OllamaEmbedding(model_name=config.OLLAMA_EMBED_MODEL,
+                              base_url=f"http://{config.OLLAMA_HOST}:{config.OLLAMA_PORT}",
                               trust_remote_code=True)
 Settings.embed_model = embed_model
 
 # load data
 loader = SimpleDirectoryReader(
-            input_dir = config.DOC_DIR,
-            required_exts=[".pdf"],
-            recursive=True
-        )
+    input_dir=config.DOC_DIR,
+    required_exts=[".pdf"],
+    recursive=True
+)
 docs = loader.load_data()
 
 # # Creating a vector index over loaded data
@@ -138,8 +141,6 @@ kg_index = KnowledgeGraphIndex.from_documents(
     show_progress=True
 )
 
-from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.core.retrievers import KnowledgeGraphRAGRetriever
 
 graph_rag_retriever = KnowledgeGraphRAGRetriever(
     storage_context=storage_context,
